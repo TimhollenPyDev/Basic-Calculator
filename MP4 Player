@@ -1,0 +1,121 @@
+import tkinter
+import requests
+from selenium import webdriver
+import time
+from PIL import Image
+from PIL import ImageTk
+from pytube import YouTube
+import os
+import pyglet
+from threading import Thread
+
+global tki
+
+root = tkinter.Tk()
+root.geometry("350x430")
+root.resizable(width=False, height=False)
+root.config(bg="Light gray")
+root.title("Download and play youtube videos.")
+
+player = pyglet.media.Player()
+
+
+def quit(event):
+    pyglet.app.exit()
+    root.destroy()
+
+
+def get_vid(Event):
+    file_name = keyword_input.get()
+
+    try:
+        with open(file_name + ".png") as f:
+            f.close()
+        if os.path.isfile(file_name + ".mp4"):
+            pass
+        else:
+            with open("finns inte.txt")as f1:
+                f1.close()
+
+    except:
+        IOError()
+        options = webdriver.ChromeOptions()
+        options.add_extension("C:\\Users\\tim\\PycharmProjects\\MP4 player\\cookie.crx")
+
+        driver = webdriver.Chrome("C:\\Users\\tim\\PycharmProjects\\MP4 player\\chromedriver.exe", options=options)
+
+        driver.get('https://www.youtube.com/results?search_query=' + file_name)
+
+        time.sleep(5)
+
+        bild_data = driver.find_elements_by_xpath('//*[@id="img"]')
+        links_data = driver.find_elements_by_xpath('//*[@id="video-title"]')
+        links = []
+        bild = []
+        for i in links_data:
+            links.append(i.get_attribute('href'))
+        for b in bild_data:
+            bild.append(b.get_attribute('src'))
+        print(links[0])
+        print((bild[0]))
+        response = requests.get(bild[0])
+
+        file = open(file_name + ".png", "wb")
+        file.write(response.content)
+        file.close()
+        yt = YouTube(links[0])
+        t = yt.streams.filter(only_audio=True)
+        t[0].download("C:\\Users\\tim\\PycharmProjects\\MP4 player", filename=file_name)
+
+
+
+    finally:
+        bild_canvas.delete("all")
+        bild_thumnail = Image.open(file_name + ".png")
+        bild_resize_thumnail = bild_thumnail.resize((250, 250), Image.ANTIALIAS)
+        bild_klar_thumnail = ImageTk.PhotoImage(bild_resize_thumnail)
+
+        bild_canvas.create_image(125, 125, image=bild_klar_thumnail)
+        bild_canvas.image = bild_klar_thumnail
+
+        MediaLoad = pyglet.media.load(keyword_input.get() + '.mp4')
+        player.queue(MediaLoad)
+
+    print("klar")
+
+
+def play_mp4():
+    player.play()
+    tki.start()
+    pyglet.app.run()
+
+
+bild_yt = Image.open("mp4-file-format-symbol_318-45324.png")
+bild_resize_yt = bild_yt.resize((250, 250), Image.ANTIALIAS)
+bild_klar_yt = ImageTk.PhotoImage(bild_resize_yt)
+
+bild_canvas = tkinter.Canvas(root, width=250, height=250)
+bild_canvas.config(bg="light gray")
+bild_canvas.place(x=50, y=30)
+bild_canvas.create_image(125, 125, image=bild_klar_yt)
+
+button_fram = tkinter.Button(root, relief="flat", activebackground="lightgray")
+button_fram.config(bg="light gray", fg="black", text="=>", font="sans 20")
+button_fram.place(x=245, y=300)
+
+button_bak = tkinter.Button(root, relief="flat", activebackground="lightgray")
+button_bak.config(bg="light gray", fg="black", text="<=", font="sans 20")
+button_bak.place(x=50, y=300)
+
+button_paus = tkinter.Button(root, relief="flat", activebackground="lightgray")
+button_paus.config(bg="light gray", fg="black", text=" | | ", font="sans 20", command=play_mp4)
+button_paus.place(x=145, y=300)
+
+keyword_input = tkinter.Entry(root, width=25, font="sans 12")
+keyword_input.place(x=65, y=375)
+
+root.bind("<Escape>", quit)
+root.bind("<Return>", get_vid)
+
+root.mainloop()
+tki = Thread(target=root.mainloop())
